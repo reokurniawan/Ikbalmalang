@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IKBAL MALANG RAYA - Portal Berita, Opini & Karya Santri</title>
+
+  <!-- Tailwind CSS & FontAwesome Icons -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] },
+          colors: {
+            islamic: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              200: '#bbf7d0',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Firebase Compatibility SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics-compat.js"></script>
+
+  <style>
+    /* Custom Scrollbar for Modal and Areas */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #15803d; }
+  </style>
+</head>
+
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col antialiased selection:bg-islamic-100 selection:text-islamic-900">
+
+  <!-- TOP HEADER / NAVBAR -->
+  <header class="bg-white border-b border-islamic-100 sticky top-0 z-40 shadow-sm/50 backdrop-blur-md bg-white/95">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-20 flex items-center justify-between">
+      
+      <!-- Logo & Brand -->
+      <div class="flex items-center space-x-3 cursor-pointer group" onclick="switchTab('beranda')">
+        <div class="w-11 h-11 rounded-xl bg-islamic-800 flex items-center justify-center text-white font-bold text-xl shadow-md group-hover:bg-islamic-900 transition-all duration-200">
+          <i class="fa-solid fa-moon text-islamic-200"></i>
+        </div>
+        <div>
+          <span class="text-lg sm:text-xl font-black text-islamic-900 tracking-tight block leading-tight">IKBAL MALANG RAYA</span>
+          <span class="text-[11px] sm:text-xs text-slate-500 font-medium tracking-wide">Ikatan Keluarga Besar Al-Amien Prenduan</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="flex items-center space-x-1 sm:space-x-2">
+        <button onclick="switchTab('beranda')" id="nav-beranda" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-islamic-800 bg-islamic-50 transition flex items-center">
+          <i class="fa-solid fa-newspaper mr-1.5 text-islamic-700"></i> Beranda
+        </button>
+        <button onclick="switchTab('kirim')" id="nav-kirim" class="px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-islamic-800 hover:bg-slate-50 transition flex items-center">
+          <i class="fa-solid fa-paper-plane mr-1.5 text-islamic-700"></i> Kirim Tulisan
+        </button>
+        <button onclick="openAdminPrompt()" id="nav-admin" class="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-islamic-800 hover:text-white transition flex items-center ml-2">
+          <i class="fa-solid fa-user-shield mr-1.5"></i> Admin
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- HERO BANNER -->
+  <section class="bg-gradient-to-br from-islamic-900 via-islamic-800 to-islamic-700 text-white py-12 sm:py-16 px-4 text-center relative overflow-hidden">
+    <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+    <div class="max-w-3xl mx-auto relative z-10">
+      <span class="inline-block py-1 px-4 bg-islamic-600/60 backdrop-blur border border-islamic-400/30 rounded-full text-[11px] font-bold tracking-wider uppercase mb-3 text-islamic-100 shadow-inner">
+        Wadah Silaturahmi & Literasi Santri
+      </span>
+      <h1 class="text-2xl sm:text-4xl font-black tracking-tight mb-3 leading-tight">
+        Mimbar Berita, Opini & Gagasan Alumni
+      </h1>
+      <p class="text-islamic-100/90 text-xs sm:text-sm leading-relaxed max-w-2xl mx-auto font-normal">
+        Portal resmi ruang kreasi intelektual serta informasi kegiatan keluarga besar alumni Al-Amien Prenduan di kawasan Malang Raya.
+      </p>
+    </div>
+  </section>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 flex-grow w-full">
+
+    <!-- VIEW 1: BERANDA / LIST ARTIKEL -->
+    <div id="view-beranda" class="space-y-6">
+      
+      <!-- Filter Kategori & Judul Bagian -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200">
+        <div>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-islamic-700 text-lg"></i> Tulisan Terbaru
+          </h2>
+          <p class="text-xs text-slate-500 mt-0.5">Daftar artikel, berita, dan opini yang telah disetujui admin</p>
+        </div>
+
+        <!-- Filter Buttons -->
+        <div class="flex flex-wrap gap-1.5 sm:gap-2">
+          <button onclick="filterCategory('Semua')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-islamic-800 text-white transition shadow-sm">Semua</button>
+          <button onclick="filterCategory('Opini')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:border-islamic-600 transition">Opini</button>
+          <button onclick="filterCategory('Berita')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:border-islamic-600 transition">Berita</button>
+          <button onclick="filterCategory('Artikel')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:border-islamic-600 transition">Artikel</button>
+          <button onclick="filterCategory('Sastra')" class="cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:border-islamic-600 transition">Sastra</button>
+        </div>
+      </div>
+
+      <!-- Grid Artikel -->
+      <div id="articles-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div class="col-span-full py-20 text-center text-slate-400">
+          <i class="fa-solid fa-spinner fa-spin text-3xl text-islamic-700 mb-3"></i>
+          <p class="text-sm font-medium">Memuat data tulisan...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 2: FORM SUBMIT KARYA TULIS -->
+    <div id="view-kirim" class="hidden max-w-2xl mx-auto">
+      <div class="bg-white rounded-2xl p-6 sm:p-8 shadow-sm border border-slate-200">
+        
+        <div class="border-b border-slate-100 pb-5 mb-6">
+          <span class="text-xs font-bold text-islamic-700 uppercase tracking-widest block mb-1">Kiriman Karya Santri</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900">Formulir Kirim Tulisan</h2>
+          <p class="text-xs text-slate-500 mt-1">Isi data diri Anda dengan benar. Tulisan akan dikurasi oleh admin sebelum diterbitkan di portal.</p>
+        </div>
+
+        <form id="submission-form" onsubmit="handleFormSubmit(event)" class="space-y-4">
+          
+          <!-- Data Diri Penulis -->
+          <div class="p-4 bg-slate-50 rounded-xl space-y-4 border border-slate-100">
+            <h3 class="text-xs font-bold text-islamic-900 uppercase tracking-wider flex items-center">
+              <i class="fa-solid fa-address-card mr-2 text-islamic-700"></i> Identitas Penulis
+            </h3>
+            
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap *</label>
+                <input type="text" id="author-name" required placeholder="Contoh: Ahmad Abdullah" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 outline-none bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Email Aktif *</label>
+                <input type="email" id="author-email" required placeholder="ahmad@gmail.com" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 outline-none bg-white" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">No. WhatsApp *</label>
+                <input type="tel" id="author-phone" required placeholder="081234567890" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 outline-none bg-white" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Asal Kampus / Instansi *</label>
+                <input type="text" id="author-campus" required placeholder="UIN Malang / UB / UM / Unisma" class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 focus:border-islamic-500 outline-none bg-white" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Detail Tulisan -->
+          <div class="space-y-4 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+              <div class="sm:col-span-1">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Kategori *</label>
+                <select id="article-category" required class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 outline-none bg-white">
+                  <option value="Opini">Opini</option>
+                  <option value="Berita">Berita</option>
+                  <option value="Artikel">Artikel</option>
+                  <option value="Sastra">Sastra (Puisi/Cerpen)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-2">
+                <label class="block text-xs font-semibold text-slate-700 mb-1">Judul Tulisan *</label>
+                <input type="text" id="article-title" required placeholder="Tuliskan judul artikel yang menarik..." class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 outline-none" />
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1">Isi Lengkap Tulisan *</label>
+              <textarea id="article-content" rows="10" required placeholder="Tulis atau tempel tulisan/gagasan lengkap Anda di sini..." class="w-full px-3.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-islamic-500 outline-none"></textarea>
+            </div>
+          </div>
+
+          <div class="pt-3">
+            <button type="submit" id="submit-btn" class="w-full py-3 px-4 rounded-xl bg-islamic-800 hover:bg-islamic-900 text-white font-bold text-sm shadow-md transition flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Kirimkan Karya Sekarang</span>
+            </button>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+    <!-- VIEW 3: PANEL ADMIN (ACC & KONTROL TULISAN) -->
+    <div id="view-admin" class="hidden">
+      <div class="flex items-center justify-between mb-6 pb-4 border-b border-slate-200">
+        <div>
+          <span class="px-2.5 py-1 rounded bg-islamic-100 text-islamic-800 text-[11px] font-bold uppercase tracking-wider">Mode Pengelola</span>
+          <h2 class="text-xl sm:text-2xl font-bold text-slate-900 mt-1">Panel Verifikasi Tulisan Admin</h2>
+        </div>
+        <button onclick="exitAdmin()" class="text-xs text-red-600 hover:bg-red-50 px-3 py-1.5 rounded-lg border border-red-200 font-semibold transition flex items-center">
+          <i class="fa-solid fa-right-from-bracket mr-1.5"></i> Keluar Admin
+        </button>
+      </div>
+
+      <!-- Admin Feed -->
+      <div id="admin-pending-container" class="space-y-4">
+        <!-- Terisi Otomatis via JS -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODAL BACA SELENGKAPNYA -->
+  <div id="read-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white w-full max-w-3xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in duration-200">
+      
+      <!-- Modal Header -->
+      <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <span id="modal-category" class="px-3 py-1 rounded-full text-xs font-bold bg-islamic-100 text-islamic-800"></span>
+        <button onclick="closeModal()" class="w-8 h-8 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 flex items-center justify-center transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 sm:p-8 overflow-y-auto space-y-4">
+        <h2 id="modal-title" class="text-xl sm:text-3xl font-extrabold text-slate-900 leading-snug"></h2>
+        
+        <div class="flex flex-wrap items-center gap-y-2 gap-x-4 text-xs text-slate-500 py-3 border-y border-slate-100 bg-slate-50/80 px-4 rounded-xl">
+          <span class="flex items-center"><i class="fa-solid fa-user text-islamic-700 mr-1.5"></i><strong id="modal-author" class="text-slate-800"></strong></span>
+          <span class="flex items-center"><i class="fa-solid fa-graduation-cap text-islamic-700 mr-1.5"></i><span id="modal-campus"></span></span>
+          <span class="flex items-center"><i class="fa-regular fa-clock text-islamic-700 mr-1.5"></i><span id="modal-date"></span></span>
+        </div>
+
+        <div id="modal-content" class="text-slate-700 leading-relaxed text-sm sm:text-base whitespace-pre-line pt-2 font-normal"></div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 bg-slate-50 border-t border-slate-100 text-right">
+        <button onclick="closeModal()" class="px-5 py-2 rounded-lg bg-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-300 transition">Tutup Bacaan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500 mt-auto">
+    <div class="max-w-6xl mx-auto px-4 space-y-2">
+      <div class="w-8 h-8 rounded-lg bg-islamic-800 text-white flex items-center justify-center mx-auto text-sm font-bold">
+        <i class="fa-solid fa-moon"></i>
+      </div>
+      <p class="font-bold text-islamic-900 text-sm">IKBAL MALANG RAYA</p>
+      <p class="text-slate-500">Ikatan Keluarga Besar Al-Amien Prenduan — Korwil Malang Raya</p>
+      <p class="text-[11px] text-slate-400 pt-2">&copy; 2026 IKBAL Malang Raya. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- SCRIPT UTAMA FIREBASE & INTERAKSI -->
+  <script>
+    // =======================================================
+    // 1. INTEGRASI KONFIGURASI FIREBASE MILIK ANDA
+    // =======================================================
+    const firebaseConfig = {
+      apiKey: "AIzaSyClGgcUyZj16x1XpbGGFkIdbQC9OSqnvtw",
+      authDomain: "apa-1c339.firebaseapp.com",
+      projectId: "apa-1c339",
+      storageBucket: "apa-1c339.firebasestorage.app",
+      messagingSenderId: "446205639535",
+      appId: "1:446205639535:web:3ac4916c616089f15f869a",
+      measurementId: "G-JNX5TD4YKQ"
+    };
+
+    // Initialize Firebase Services
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    if (firebase.analytics) {
+      firebase.analytics();
+    }
+
+    // Variabel Global
+    let allArticles = [];
+    let activeFilter = 'Semua';
+    const ADMIN_PIN = "ikbal1952"; // PIN Pengelola Admin
+
+    // SAKLAR TAB HALAMAN
+    function switchTab(tabId) {
+      document.getElementById('view-beranda').classList.add('hidden');
+      document.getElementById('view-kirim').classList.add('hidden');
+      document.getElementById('view-admin').classList.add('hidden');
+
+      document.getElementById('nav-beranda').className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-islamic-800 hover:bg-slate-50 transition flex items-center";
+      document.getElementById('nav-kirim').className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:text-islamic-800 hover:bg-slate-50 transition flex items-center";
+
+      if (tabId === 'beranda') {
+        document.getElementById('view-beranda').classList.remove('hidden');
+        document.getElementById('nav-beranda').className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-islamic-800 bg-islamic-50 transition flex items-center";
+      } else if (tabId === 'kirim') {
+        document.getElementById('view-kirim').classList.remove('hidden');
+        document.getElementById('nav-kirim').className = "px-3.5 py-2 rounded-lg text-xs sm:text-sm font-semibold text-islamic-800 bg-islamic-50 transition flex items-center";
+      } else if (tabId === 'admin') {
+        document.getElementById('view-admin').classList.remove('hidden');
+        loadAdminSubmissions();
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // SIMPAN FORM SUBMISSION KE FIRESTORE
+    async function handleFormSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin mr-2"></i> Mengirimkan Tulisan...`;
+
+      const payload = {
+        authorName: document.getElementById('author-name').value.trim(),
+        authorEmail: document.getElementById('author-email').value.trim(),
+        authorPhone: document.getElementById('author-phone').value.trim(),
+        authorCampus: document.getElementById('author-campus').value.trim(),
+        category: document.getElementById('article-category').value,
+        title: document.getElementById('article-title').value.trim(),
+        content: document.getElementById('article-content').value.trim(),
+        status: 'pending', // Menunggu persetujuan Admin
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        await db.collection('articles').add(payload);
+        alert('Alhamdulillah! Karya Anda berhasil terikirim.\n\nTulisan akan ditinjau oleh tim Redaksi Admin IKBAL Malang Raya sebelum dipublikasikan.');
+        document.getElementById('submission-form').reset();
+        switchTab('beranda');
+      } catch (err) {
+        console.error("Firestore Save Error:", err);
+        alert('Gagal mengirim karya: ' + err.message + '\n\nPastikan aturan Firestore sudah dikonfigurasi!');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<i class="fa-solid fa-paper-plane mr-2"></i> Kirimkan Karya Sekarang`;
+      }
+    }
+
+    // REALTIME LISTENER UNTUK ARTIKEL BERSTATUS APPROVED
+    function listenToPublishedArticles() {
+      db.collection('articles')
+        .where('status', '==', 'approved')
+        .onSnapshot((snapshot) => {
+          allArticles = [];
+          snapshot.forEach(doc => {
+            allArticles.push({ id: doc.id, ...doc.data() });
+          });
+          renderArticles();
+        }, (error) => {
+          console.error("Error Listening to Articles:", error);
+          const container = document.getElementById('articles-container');
+          container.innerHTML = `
+            <div class="col-span-full p-6 bg-red-50 text-red-700 rounded-2xl text-center text-xs">
+              <i class="fa-solid fa-triangle-exclamation text-lg mb-2 block"></i>
+              Gagal memuat artikel dari Firebase. Pastikan Security Rules di konsol Firebase sudah diset ke mode izinkan akses.
+            </div>
+          `;
+        });
+    }
+
+    // FILTER KATEGORI TULISAN
+    function filterCategory(cat) {
+      activeFilter = cat;
+      document.querySelectorAll('.cat-btn').forEach(btn => {
+        if (btn.innerText === cat) {
+          btn.className = "cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-islamic-800 text-white transition shadow-sm";
+        } else {
+          btn.className = "cat-btn px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-slate-600 border border-slate-200 hover:border-islamic-600 transition";
+        }
+      });
+      renderArticles();
+    }
+
+    // RENDER ARTIKEL DI BERANDA
+    function renderArticles() {
+      const container = document.getElementById('articles-container');
+      const filtered = activeFilter === 'Semua' 
+        ? allArticles 
+        : allArticles.filter(a => a.category === activeFilter);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="col-span-full py-16 bg-white rounded-2xl border border-dashed border-slate-200 text-center text-slate-400">
+            <i class="fa-regular fa-folder-open text-4xl mb-3 text-islamic-500/30"></i>
+            <p class="text-sm font-medium">Belum ada tulisan dipublikasikan untuk kategori ini.</p>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const previewText = item.content.length > 130 ? item.content.substring(0, 130) + '...' : item.content;
+        const dateStr = item.createdAt ? new Date(item.createdAt.toDate()).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Terbaru';
+
+        return `
+          <div class="bg-white rounded-2xl p-6 border border-slate-200/80 shadow-sm hover:shadow-md transition flex flex-col justify-between group">
+            <div>
+              <div class="flex items-center justify-between mb-3">
+                <span class="px-2.5 py-1 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-islamic-100 text-islamic-800">${item.category || 'Opini'}</span>
+                <span class="text-[11px] text-slate-400 font-medium"><i class="fa-regular fa-calendar mr-1"></i>${dateStr}</span>
+              </div>
+              <h3 class="text-base sm:text-lg font-bold text-slate-900 leading-snug mb-2 group-hover:text-islamic-700 transition line-clamp-2">
+                ${item.title}
+              </h3>
+              <p class="text-xs text-slate-600 leading-relaxed mb-4 font-normal">${previewText}</p>
+            </div>
+
+            <div class="pt-4 border-t border-slate-100 flex items-center justify-between mt-auto">
+              <div class="text-xs">
+                <p class="font-bold text-slate-800 truncate max-w-[130px]">${item.authorName}</p>
+                <p class="text-[10px] text-slate-400 truncate max-w-[130px]">${item.authorCampus}</p>
+              </div>
+              <button onclick="readFullArticle('${item.id}')" class="text-xs font-bold text-islamic-700 bg-islamic-50 hover:bg-islamic-100 px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                <span>Baca</span> <i class="fa-solid fa-arrow-right text-[10px]"></i>
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // MEMBUKA MODAL SELENGKAPNYA
+    function readFullArticle(id) {
+      const art = allArticles.find(a => a.id === id);
+      if (!art) return;
+
+      document.getElementById('modal-category').innerText = art.category;
+      document.getElementById('modal-title').innerText = art.title;
+      document.getElementById('modal-author').innerText = art.authorName;
+      document.getElementById('modal-campus').innerText = art.authorCampus;
+      document.getElementById('modal-date').innerText = art.createdAt ? new Date(art.createdAt.toDate()).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+      document.getElementById('modal-content').innerText = art.content;
+
+      document.getElementById('read-modal').classList.remove('hidden');
+    }
+
+    function closeModal() {
+      document.getElementById('read-modal').classList.add('hidden');
+    }
+
+    // AKSES ADMIN VERIFIKASI PIN
+    function openAdminPrompt() {
+      const pin = prompt("Masukkan Passcode Admin IKBAL Malang Raya:");
+      if (pin === ADMIN_PIN) {
+        switchTab('admin');
+      } else if (pin !== null) {
+        alert("Passcode Admin Salah!");
+      }
+    }
+
+    function exitAdmin() {
+      switchTab('beranda');
+    }
+
+    // LOAD DAFTAR TULISAN PENDING UNTUK ADMIN
+    async function loadAdminSubmissions() {
+      const container = document.getElementById('admin-pending-container');
+      container.innerHTML = `<div class="p-12 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl text-islamic-700 mb-2"></i><p class="text-xs">Memeriksa kiriman masuk...</p></div>`;
+
+      try {
+        const snap = await db.collection('articles').where('status', '==', 'pending').get();
+        if (snap.empty) {
+          container.innerHTML = `
+            <div class="bg-white p-8 rounded-2xl border text-center text-slate-400">
+              <i class="fa-solid fa-circle-check text-3xl text-islamic-600 mb-2"></i>
+              <p class="text-xs font-semibold text-slate-600">Tidak ada naskah tulisan baru yang perlu dikurasi saat ini.</p>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        snap.forEach(doc => {
+          const d = doc.data();
+          const cleanWA = d.authorPhone ? d.authorPhone.replace(/[^0-9]/g, '') : '';
+          const waFormatted = cleanWA.startsWith('0') ? '62' + cleanWA.slice(1) : cleanWA;
+
+          html += `
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
+              <div class="flex flex-col sm:flex-row justify-between sm:items-start gap-3 border-b border-slate-100 pb-3">
+                <div>
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase bg-amber-100 text-amber-800">Menunggu ACC</span>
+                    <span class="text-xs font-bold text-islamic-800">[${d.category}]</span>
+                  </div>
+                  <h3 class="text-base sm:text-lg font-bold text-slate-900">${d.title}</h3>
+                </div>
+                <div class="text-xs text-slate-500 bg-slate-50 p-3 rounded-xl border border-slate-100 min-w-[200px]">
+                  <p class="font-semibold text-slate-800 mb-0.5"><i class="fa-solid fa-user text-islamic-700 mr-1"></i> ${d.authorName}</p>
+                  <p class="text-slate-500 mb-1"><i class="fa-solid fa-graduation-cap text-islamic-700 mr-1"></i> ${d.authorCampus}</p>
+                  <p class="text-[11px]"><i class="fa-solid fa-envelope mr-1"></i> ${d.authorEmail}</p>
+                  <p class="text-[11px]"><i class="fa-brands fa-whatsapp text-green-600 mr-1"></i> <a href="https://wa.me/${waFormatted}" target="_blank" class="text-islamic-700 font-bold underline">${d.authorPhone}</a></p>
+                </div>
+              </div>
+
+              <div class="p-4 bg-slate-50 rounded-xl text-xs text-slate-700 whitespace-pre-line max-h-52 overflow-y-auto border border-slate-100 leading-relaxed">
+                ${d.content}
+              </div>
+
+              <div class="flex justify-end gap-2 pt-2">
+                <button onclick="rejectArticle('${doc.id}')" class="px-4 py-2 text-xs font-bold rounded-lg bg-red-50 text-red-600 hover:bg-red-100 transition flex items-center gap-1">
+                  <i class="fa-solid fa-trash"></i> Tolak / Hapus
+                </button>
+                <button onclick="approveArticle('${doc.id}')" class="px-4 py-2 text-xs font-bold rounded-lg bg-islamic-800 text-white hover:bg-islamic-900 transition flex items-center gap-1 shadow-sm">
+                  <i class="fa-solid fa-check"></i> Setujui & Terbitkan
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        console.error(err);
+        container.innerHTML = `<div class="p-4 bg-red-50 text-red-600 text-xs rounded-xl">Gagal memuat kiriman: ${err.message}</div>`;
+      }
+    }
+
+    // ACC TULISAN
+    async function approveArticle(id) {
+      if (!confirm("Setujui tulisan ini untuk diterbitkan ke beranda publik?")) return;
+      try {
+        await db.collection('articles').doc(id).update({
+          status: 'approved',
+          approvedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        alert("Tulisan berhasil disetujui & langsung tayang!");
+        loadAdminSubmissions();
+      } catch (err) {
+        alert("Gagal meng-ACC tulisan: " + err.message);
+      }
+    }
+
+    // TOLAK / HAPUS TULISAN
+    async function rejectArticle(id) {
+      if (!confirm("Apakah Anda yakin ingin menghapus kiriman tulisan ini?")) return;
+      try {
+        await db.collection('articles').doc(id).delete();
+        loadAdminSubmissions();
+      } catch (err) {
+        alert("Gagal menghapus tulisan: " + err.message);
+      }
+    }
+
+    // Inisialisasi Aplikasi saat Load
+    listenToPublishedArticles();
+  </script>
+</body>
+</html>
+
